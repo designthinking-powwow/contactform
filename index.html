@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>專案合作與諮詢 | Design Thinking POW WOW</title>
+    
+    <!-- 引入 Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- 設定 Import Map -->
+    <script type="importmap">
+    {
+      "imports": {
+        "react": "https://esm.sh/react@18.2.0",
+        "react-dom/client": "https://esm.sh/react-dom@18.2.0/client",
+        "lucide-react": "https://esm.sh/lucide-react@0.292.0"
+      }
+    }
+    </script>
+
+    <!-- 引入 Babel -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    
+    <style>
+      @keyframes fade-in-up {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
+      .animate-fade-in-up {
+        animation: fade-in-up 0.6s ease-out forwards;
+      }
+      .delay-100 { animation-delay: 0.1s; }
+      .delay-200 { animation-delay: 0.2s; }
+    </style>
+</head>
+<body class="bg-[#F0F4F8]">
+    
+    <div id="root"></div>
+
+    <script type="text/babel" data-type="module">
+        import React, { useState, useEffect } from 'react';
+        import { createRoot } from 'react-dom/client';
+        import { Send, CheckCircle, ArrowRight, Calendar, MessageSquare, Mail, User, Phone, Loader2, Sparkles, Building2, GraduationCap, Landmark, Users, Lightbulb, UserPlus, MessageCircle, ClipboardList } from 'lucide-react';
+
+        // 合作類型資料
+        const cooperationTypes = [
+          { 
+            id: 'corporate', 
+            label: '企業培訓 / 內訓', 
+            icon: <Building2 size={24} />, 
+            desc: '為團隊導入創新思維' 
+          },
+          { 
+            id: 'government', 
+            label: '政府單位合作', 
+            icon: <Landmark size={24} />, 
+            desc: '公部門創新與服務設計' 
+          },
+          { 
+            id: 'school', 
+            label: '學校機構 / 教育', 
+            icon: <GraduationCap size={24} />, 
+            desc: '校園工作坊與演講' 
+          },
+          { 
+            id: 'consulting', 
+            label: '商業顧問諮詢', 
+            icon: <Lightbulb size={24} />, 
+            desc: '解決特定商業問題' 
+          },
+          { 
+            id: 'individual', 
+            label: '個人 / 公開班詢問', 
+            icon: <Users size={24} />, 
+            desc: '一般課程報名與客服' 
+          },
+          { 
+            id: 'companion', 
+            label: '個人陪跑 / 教練', 
+            icon: <UserPlus size={24} />, 
+            desc: '一對一深度指導與協作' 
+          },
+        ];
+
+        function ContactForm() {
+          const initialFormState = {
+            name: '',
+            email: '',
+            phone: '', 
+            organization: '', 
+            cooperationType: 'corporate', 
+            participants: '', 
+            timeline: '',
+            description: ''
+          };
+
+          const [formData, setFormData] = useState(initialFormState);
+          const [status, setStatus] = useState('idle'); 
+          const [placeholderText, setPlaceholderText] = useState('');
+
+          useEffect(() => {
+            switch(formData.cooperationType) {
+              case 'corporate':
+                setPlaceholderText("例如：我們希望能為業務部門舉辦一場 Design Thinking 工作坊，希望能提升團隊的創意發想能力，預計時數為一天...");
+                break;
+              case 'government':
+                setPlaceholderText("例如：希望能針對「便民服務流程優化」進行專案合作或培訓課程...");
+                break;
+              case 'school':
+                setPlaceholderText("例如：想邀請講師為設計系的學生進行工作坊，主題關於使用者體驗...");
+                break;
+              case 'consulting':
+                setPlaceholderText("例如：我們目前的產品遇到轉換率瓶頸，希望能透過設計思考找出問題點並優化商業模式...");
+                break;
+              case 'individual':
+                setPlaceholderText("例如：請問最近一期的公開班什麼時候開課？我有興趣報名...");
+                break;
+              case 'companion':
+                setPlaceholderText("例如：我目前正在進行一個專案，希望每週能有 1 小時的一對一指導，協助我梳理邏輯與策略...");
+                break;
+              default:
+                setPlaceholderText("請簡述您的需求...");
+            }
+          }, [formData.cooperationType]);
+
+          const handleChange = (e) => {
+            const { name, value } = e.target;
+            setFormData(prev => ({ ...prev, [name]: value }));
+          };
+
+          const handleTypeSelect = (typeId) => {
+            setFormData(prev => ({ ...prev, cooperationType: typeId }));
+          };
+
+          // --- Formspree 寄信邏輯 ---
+          const handleSubmit = (e) => {
+            e.preventDefault();
+            setStatus('submitting');
+
+            // --- ★ 已設定您的 Formspree ID ---
+            const FORMSPREE_ENDPOINT = 'https://formspree.io/f/movglggp'; 
+
+            // 轉換資料格式 (將合作類型 ID 轉為中文 Label)
+            const label = cooperationTypes.find(t => t.id === formData.cooperationType)?.label || formData.cooperationType;
+            
+            // 準備要送出的資料
+            const data = new FormData();
+            data.append('name', formData.name);
+            data.append('email', formData.email);
+            data.append('phone', formData.phone);
+            data.append('organization', formData.organization);
+            data.append('cooperationType', label); // 轉成中文
+            data.append('participants', formData.participants);
+            data.append('timeline', formData.timeline);
+            data.append('description', formData.description);
+
+            // 使用 fetch 發送到 Formspree
+            fetch(FORMSPREE_ENDPOINT, {
+                method: 'POST',
+                body: data,
+                headers: {
+                    'Accept': 'application/json'
+                }
+            })
+            .then(response => {
+                if (response.ok) {
+                    setStatus('success');
+                } else {
+                    return response.json().then(data => {
+                        if (Object.hasOwn(data, 'errors')) {
+                            console.error(data["errors"].map(error => error["message"]).join(", "));
+                        } else {
+                            console.error('Formspree submission error');
+                        }
+                        throw new Error('Form submission failed');
+                    });
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert("發送失敗，請檢查網址是否正確，或稍後再試。");
+                setStatus('idle');
+            });
+          };
+
+          if (status === 'success') {
+            return (
+              <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4 font-sans">
+                <div className="bg-white max-w-lg w-full rounded-3xl shadow-2xl p-10 text-center border-t-8 border-blue-600 animate-fade-in-up relative overflow-hidden">
+                  <div className="absolute top-0 right-0 w-32 h-32 bg-blue-100 rounded-full blur-3xl opacity-50 -translate-y-1/2 translate-x-1/2"></div>
+                  <div className="absolute bottom-0 left-0 w-32 h-32 bg-yellow-100 rounded-full blur-3xl opacity-50 translate-y-1/2 -translate-x-1/2"></div>
+                  
+                  <div className="relative z-10">
+                    <div className="w-24 h-24 bg-blue-50 rounded-full flex items-center justify-center mx-auto mb-8 shadow-inner">
+                      <CheckCircle className="w-12 h-12 text-blue-600 drop-shadow-md" />
+                    </div>
+                    
+                    <h2 className="text-3xl font-black text-slate-800 mb-4 tracking-tight">感謝您的聯繫！</h2>
+                    <div className="w-16 h-1 bg-blue-200 mx-auto mb-6 rounded-full"></div>
+                    <p className="text-slate-800 font-bold mb-4 leading-relaxed text-xl">
+                      我們已收到您的需求，<br/>團隊將在 <span className="text-blue-600 text-2xl">24 小時內</span> 回信給您！
+                    </p>
+                    
+                    <div className="space-y-4 mt-8">
+                      <button 
+                        onClick={() => {
+                          setFormData(initialFormState);
+                          setStatus('idle');
+                        }}
+                        className="w-full py-4 rounded-xl bg-slate-100 text-slate-700 font-bold hover:bg-slate-200 hover:text-slate-900 flex items-center justify-center gap-2 transition-all"
+                      >
+                        <ArrowRight size={18} />
+                        返回首頁
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            );
+          }
+
+          return (
+            <div className="min-h-screen bg-[#F0F4F8] font-sans text-slate-800 py-12 px-4 sm:px-6 lg:px-8 selection:bg-blue-100 selection:text-blue-900 flex justify-center">
+              
+              <div className="w-full max-w-3xl flex flex-col gap-8">
+                
+                {/* 標題區域 */}
+                <div className="text-center animate-fade-in-up">
+                  <h1 className="text-3xl md:text-5xl font-black text-slate-800 mb-4">
+                    專案合作與諮詢
+                  </h1>
+                  <p className="text-lg text-slate-600 leading-relaxed">
+                    透過設計思考，<span className="font-bold text-slate-800 underline decoration-blue-400 decoration-2 underline-offset-4">解決複雜問題，釋放創新潛能</span>。
+                  </p>
+                </div>
+
+                {/* 表單區域 */}
+                <form onSubmit={handleSubmit} className="bg-white rounded-[2rem] shadow-xl border border-slate-100 overflow-hidden relative animate-fade-in-up delay-100">
+                  <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-blue-700 via-blue-500 to-sky-400"></div>
+
+                  <div className="p-8 md:p-10 space-y-10">
+                    
+                    {/* Step 1: 選擇身份/合作類型 */}
+                    <section>
+                      <h3 className="text-xl font-bold text-slate-800 mb-6 flex items-center gap-3">
+                        <span className="bg-blue-600 text-white w-8 h-8 rounded-lg flex items-center justify-center text-sm font-bold shadow-md shadow-blue-200">01</span>
+                        請問您代表的單位或合作形式？
+                      </h3>
+                      
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        {cooperationTypes.map((type) => (
+                          <div 
+                            key={type.id}
+                            onClick={() => handleTypeSelect(type.id)}
+                            className={`cursor-pointer p-5 rounded-xl border-2 transition-all group ${
+                              formData.cooperationType === type.id 
+                                ? 'border-blue-600 bg-blue-50 shadow-md ring-1 ring-blue-600 transform scale-[1.02]' 
+                                : 'border-slate-100 hover:border-blue-300 hover:bg-slate-50'
+                            }`}
+                          >
+                            <div className="flex items-center gap-4 mb-2">
+                              <div className={`p-2 rounded-lg transition-colors ${formData.cooperationType === type.id ? 'bg-blue-600 text-white' : 'bg-slate-100 text-slate-500 group-hover:bg-blue-100 group-hover:text-blue-700'}`}>
+                                {type.icon}
+                              </div>
+                              <div className={`font-bold text-lg ${formData.cooperationType === type.id ? 'text-blue-900' : 'text-slate-600'}`}>
+                                {type.label}
+                              </div>
+                            </div>
+                            <p className="text-xs text-slate-500 pl-[3.25rem]">{type.desc}</p>
+                          </div>
+                        ))}
+                      </div>
+                    </section>
+
+                    <hr className="border-slate-100" />
+
+                    {/* Step 2: 基本資料 */}
+                    <section>
+                      <h3 className="text-xl font-bold text-slate-800 mb-6 flex items-center gap-3">
+                        <span className="bg-blue-600 text-white w-8 h-8 rounded-lg flex items-center justify-center text-sm font-bold shadow-md shadow-blue-200">02</span>
+                        聯絡人資訊
+                      </h3>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div className="space-y-2">
+                          <label className="text-sm font-bold text-slate-700">您的姓名 *</label>
+                          <div className="relative group">
+                            <User className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-blue-500 transition-colors" size={18} />
+                            <input 
+                              required
+                              name="name"
+                              value={formData.name}
+                              onChange={handleChange}
+                              className="w-full pl-11 pr-4 py-4 bg-slate-50 rounded-xl border border-transparent focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-100 transition-all outline-none font-medium text-slate-800 placeholder:text-slate-400"
+                              placeholder="請輸入姓名"
+                            />
+                          </div>
+                        </div>
+                        <div className="space-y-2">
+                          <label className="text-sm font-bold text-slate-700">單位 / 公司名稱 *</label>
+                          <div className="relative group">
+                            <Building2 className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-blue-500 transition-colors" size={18} />
+                            <input 
+                              required
+                              name="organization"
+                              value={formData.organization}
+                              onChange={handleChange}
+                              className="w-full pl-11 pr-4 py-4 bg-slate-50 rounded-xl border border-transparent focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-100 transition-all outline-none font-medium text-slate-800 placeholder:text-slate-400"
+                              placeholder={formData.cooperationType === 'individual' ? '無 (或填寫服務單位)' : '請輸入單位全稱'}
+                            />
+                          </div>
+                        </div>
+                        <div className="space-y-2">
+                          <label className="text-sm font-bold text-slate-700">Email 信箱 *</label>
+                          <div className="relative group">
+                            <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-blue-500 transition-colors" size={18} />
+                            <input 
+                              required
+                              type="email"
+                              name="email"
+                              value={formData.email}
+                              onChange={handleChange}
+                              className="w-full pl-11 pr-4 py-4 bg-slate-50 rounded-xl border border-transparent focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-100 transition-all outline-none font-medium text-slate-800 placeholder:text-slate-400"
+                              placeholder="example@email.com"
+                            />
+                          </div>
+                        </div>
+                         <div className="space-y-2">
+                          <label className="text-sm font-bold text-slate-700">聯絡電話</label>
+                          <div className="relative group">
+                            <Phone className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-blue-500 transition-colors" size={18} />
+                            <input 
+                              type="tel"
+                              name="phone"
+                              value={formData.phone}
+                              onChange={handleChange}
+                              className="w-full pl-11 pr-4 py-4 bg-slate-50 rounded-xl border border-transparent focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-100 transition-all outline-none font-medium text-slate-800 placeholder:text-slate-400"
+                              placeholder="0912-345-678"
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    </section>
+
+                    <hr className="border-slate-100" />
+
+                    {/* Step 3: 需求細節 */}
+                    <section>
+                      <h3 className="text-xl font-bold text-slate-800 mb-6 flex items-center gap-3">
+                         <span className="bg-blue-600 text-white w-8 h-8 rounded-lg flex items-center justify-center text-sm font-bold shadow-md shadow-blue-200">03</span>
+                        {formData.cooperationType === 'consulting' ? '顧問諮詢細節' : '活動與需求細節'}
+                      </h3>
+                      
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                        <div className="space-y-2">
+                           <label className="text-sm font-bold text-slate-700">
+                             {formData.cooperationType === 'consulting' ? '預計參與核心人數' : '預計參加人數'}
+                           </label>
+                           <div className="relative group">
+                              <Users className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-blue-500 transition-colors" size={18} />
+                              <input 
+                                name="participants"
+                                value={formData.participants}
+                                onChange={handleChange}
+                                className="w-full pl-11 pr-4 py-4 bg-slate-50 rounded-xl border border-transparent focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-100 transition-all outline-none font-medium text-slate-800 placeholder:text-slate-400"
+                                placeholder="1-200+ 位"
+                              />
+                           </div>
+                        </div>
+                        <div className="space-y-2">
+                          <label className="text-sm font-bold text-slate-700">期望日期 / 時間</label>
+                           <div className="relative group">
+                              <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-blue-500 transition-colors" size={18} />
+                              <input 
+                                type="text"
+                                name="timeline"
+                                value={formData.timeline}
+                                onChange={handleChange}
+                                className="w-full pl-11 pr-4 py-4 bg-slate-50 rounded-xl border border-transparent focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-100 transition-all outline-none font-medium text-slate-800 placeholder:text-slate-400"
+                                placeholder="e.g. 預計 11 月中舉辦"
+                              />
+                           </div>
+                        </div>
+                      </div>
+
+                      <div className="space-y-2">
+                        <label className="text-sm font-bold text-slate-700 flex justify-between">
+                          <span>需求描述與目標 *</span>
+                          <span className="text-xs text-slate-400 font-normal self-end">越詳細我們越能提供具體的建議</span>
+                        </label>
+                        <div className="relative group">
+                          <textarea 
+                            required
+                            name="description"
+                            value={formData.description}
+                            onChange={handleChange}
+                            rows={6}
+                            className="w-full p-4 bg-slate-50 rounded-xl border border-transparent focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-100 transition-all outline-none resize-y leading-relaxed text-slate-800 placeholder:text-slate-400"
+                            placeholder={placeholderText}
+                          />
+                          <MessageSquare className="absolute right-4 top-4 text-slate-300 group-focus-within:text-blue-400 transition-colors" size={20} />
+                        </div>
+                      </div>
+                    </section>
+
+                    {/* 送出區塊 */}
+                    <div className="pt-6">
+                      <button 
+                        type="submit"
+                        disabled={status === 'submitting'}
+                        className={`w-full py-5 px-8 rounded-2xl text-white font-bold text-xl shadow-xl shadow-blue-200 hover:shadow-2xl hover:shadow-blue-300 transition-all flex items-center justify-center gap-3 transform active:scale-[0.98] ${
+                          status === 'submitting' 
+                            ? 'bg-slate-400 cursor-not-allowed' 
+                            : 'bg-blue-600 hover:bg-blue-700 hover:-translate-y-1'
+                        }`}
+                      >
+                        {status === 'submitting' ? (
+                          <>
+                            <Loader2 className="animate-spin" />
+                            資料傳送中...
+                          </>
+                        ) : (
+                          <>
+                            發送諮詢單
+                            <Send size={22} strokeWidth={2.5} />
+                          </>
+                        )}
+                      </button>
+                      <div className="text-center mt-6 flex items-center justify-center gap-2 text-slate-500 text-sm">
+                        <ClipboardList size={14} />
+                        <span>資料將安全傳送，我們將盡快回覆</span>
+                      </div>
+                    </div>
+
+                  </div>
+                </form>
+
+                {/* 補充資訊區塊 */}
+                <div className="w-full space-y-6 animate-fade-in-up delay-200">
+                  
+                  {/* 顧問價值卡片 */}
+                  <div className="bg-[#1e3a8a] text-white rounded-[2rem] p-8 shadow-xl relative overflow-hidden group border border-blue-900">
+                    <div className="absolute top-0 right-0 w-40 h-40 bg-blue-500 rounded-full blur-[60px] opacity-20 group-hover:opacity-30 transition-opacity"></div>
+                    
+                    <h4 className="text-xl font-bold mb-4 flex items-center gap-2 relative z-10">
+                      <Lightbulb className="text-blue-300" size={24} />
+                      不只是工作坊
+                    </h4>
+                    <p className="text-blue-50 leading-relaxed mb-6 relative z-10">
+                      我們提供的不僅是教學，更是<strong className="text-white border-b border-blue-400">解決問題的策略</strong>。
+                    </p>
+                    <p className="text-blue-200 text-sm leading-relaxed relative z-10 border-l-2 border-blue-700 pl-4">
+                      「請詳細填寫您的需求，這能協助我們判斷是要提供標準化的培訓，還是量身打造的顧問專案。」
+                    </p>
+                  </div>
+
+                  {/* 合作流程 */}
+                  <div className="bg-white rounded-[2rem] p-8 shadow-lg border border-slate-200">
+                    <h4 className="text-slate-800 font-bold mb-6 text-lg">合作三步驟</h4>
+                    <div className="space-y-6 relative">
+                      <div className="absolute left-[19px] top-4 bottom-4 w-0.5 bg-slate-100"></div>
+                      
+                      <div className="relative flex gap-4">
+                        <div className="w-10 h-10 rounded-full bg-blue-600 text-white font-bold flex items-center justify-center z-10 shrink-0 shadow-lg shadow-blue-200">1</div>
+                        <div>
+                          <div className="font-bold text-slate-800">填寫需求</div>
+                          <div className="text-sm text-slate-500 mt-1">讓我們了解您的單位屬性與目前面臨的挑戰。</div>
+                        </div>
+                      </div>
+
+                      <div className="relative flex gap-4">
+                        <div className="w-10 h-10 rounded-full bg-white border-2 border-slate-200 text-slate-400 font-bold flex items-center justify-center z-10 shrink-0">2</div>
+                        <div>
+                          <div className="font-bold text-slate-800">需求診斷與建議</div>
+                          <div className="text-sm text-slate-500 mt-1">我們會依照人數與客製化程度，提供最適合的執行方案。</div>
+                        </div>
+                      </div>
+
+                      <div className="relative flex gap-4">
+                        <div className="w-10 h-10 rounded-full bg-white border-2 border-slate-200 text-slate-400 font-bold flex items-center justify-center z-10 shrink-0">3</div>
+                        <div>
+                          <div className="font-bold text-slate-800">啟動專案</div>
+                          <div className="text-sm text-slate-500 mt-1">開始一場充滿能量與創意的工作坊或專案！</div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* 緊急聯絡資訊 */}
+                  <div className="bg-[#06C755] rounded-[2rem] p-8 shadow-xl shadow-green-100/50 text-white relative overflow-hidden">
+                     <div className="absolute top-0 right-0 w-24 h-24 bg-white opacity-20 rounded-full -translate-y-8 translate-x-8 blur-xl"></div>
+                     
+                     <h4 className="font-bold text-xl mb-2 flex items-center gap-2">
+                       有緊急需求？
+                     </h4>
+                     <p className="font-medium opacity-90 mb-6 text-green-50">歡迎直接加入官方 Line@ 好友</p>
+                     
+                     <a 
+                       href="https://lin.ee/WmArXPd" 
+                       target="_blank" 
+                       rel="noopener noreferrer"
+                       className="bg-white text-[#06C755] rounded-xl p-4 flex items-center gap-3 hover:bg-green-50 transition-colors cursor-pointer group shadow-sm"
+                     >
+                        <div className="bg-[#06C755] text-white p-1.5 rounded-full group-hover:scale-110 transition-transform">
+                          <MessageCircle size={20} fill="white" />
+                        </div>
+                        <div>
+                          <div className="font-bold text-sm">Design Thinking POW WOW</div>
+                          <div className="text-xs text-green-600 font-medium opacity-80">點擊加入好友</div>
+                        </div>
+                        <ArrowRight size={16} className="ml-auto text-green-300 group-hover:translate-x-1 transition-transform" />
+                     </a>
+                  </div>
+
+                </div>
+              </div>
+            </div>
+          );
+        }
+
+        const root = createRoot(document.getElementById('root'));
+        root.render(<ContactForm />);
+    </script>
+</body>
+</html>
