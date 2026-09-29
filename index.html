@@ -5,6 +5,18 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>專案合作與諮詢 | Design Thinking POW WOW</title>
     
+    <!-- Google Analytics 4：只用來記錄「表單送出成功」，不記錄頁面瀏覽，也不傳送姓名、Email 等個人資料 -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-Y0VX6H9PVX"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-Y0VX6H9PVX', {
+        send_page_view: false,
+        cookie_flags: 'SameSite=None;Secure'
+      });
+    </script>
+
     <!-- 引入 Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     
@@ -165,6 +177,13 @@
             })
             .then(response => {
                 if (response.ok) {
+                    // ★ 通知 GA4：有人成功送出詢問（只傳合作類型，不傳個人資料）
+                    if (typeof window.gtag === 'function') {
+                        window.gtag('event', 'generate_lead', {
+                            form_name: 'contactform',
+                            cooperation_type: label
+                        });
+                    }
                     setStatus('success');
                 } else {
                     return response.json().then(data => {
